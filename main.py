@@ -24,12 +24,12 @@ def note_read():
             # Draw rectangles around detected areas
             cv2.rectangle(main_color, pt, (pt[0] + tem_w, pt[1] + tem_h), (0, 255, 0))
             note_positions.append((
-                int(pt[0]) + tem_w/2,
-                int(pt[1]) + tem_h/2
+                int(pt[0]) + int(tem_w/2),
+                int(pt[1]) + int(tem_h/2)
             ))
             note_heights.add(pt[1] + int(tem_h/2))
 
-n_count = 4
+n_count = 4 # note template count
 
 # Load the main image and the template image
 main_color = cv2.imread('ode_to_joy.png', cv2.IMREAD_COLOR)
@@ -47,31 +47,26 @@ clefs_heights = []
 clef_read()
 note_read()
 
-
-# Draw lines for heights
-for h in note_heights:
-    cv2.line(main_color, (0, h), (main_color.shape[0], h), (255, 0, 0))
+# Draw notes positions
+for pos in note_positions:
+    x = pos[0]
+    y = pos[1]
+    cv2.rectangle(main_color, (x, y), (x, y), (255, 0, 0))
 
 # Line references with clefs positions
-print("--- clef heights: ---")
 for h in clefs_heights:
-    print(h)
     ch = h + clef_template.shape[0] - 1
+    line_h = (clef_template.shape[0]-1) / 4
     cv2.line(main_color, (500, h), (main_color.shape[0], h), (0, 0, 255))
     cv2.line(main_color, (500, ch), (main_color.shape[0], ch), (0, 0, 255))
-print("------")
+
+    for i in range(1, 4):
+        cv2.line(main_color, (500, h+int(i*line_h)), (main_color.shape[0], h+int(i*line_h)), (0, 127, 255))
 
 # Display the result
 detected_image = cv2.resize(main_color, (int(main_color.shape[1]/2), int(main_color.shape[0]/2)), interpolation=cv2.INTER_AREA)
 cv2.imshow('Detected Image', detected_image)
 cv2.imwrite('export.png', main_color)
-
-for pos in note_positions:
-    print(pos)
-
-note_heights = sorted(note_heights)
-for h in note_heights:
-    print(h)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
