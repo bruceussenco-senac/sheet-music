@@ -36,6 +36,8 @@ main_color = cv2.imread('ode_to_joy.png', cv2.IMREAD_COLOR)
 main_image = cv2.cvtColor(main_color, cv2.COLOR_BGR2GRAY)
 note_templates = []
 clef_template = cv2.imread('clef0.png', cv2.IMREAD_COLOR)
+line_height = (clef_template.shape[0]-1) / 4 # distance between consecutive lines of the sheet
+line_hheight = (clef_template.shape[0]-1) / 8 # "distance between notes"
 for i in range(n_count):
     template = cv2.imread(f'n{i}.png', cv2.IMREAD_COLOR)
     note_templates.append(template)
@@ -47,21 +49,19 @@ clefs_heights = []
 clef_read()
 note_read()
 
-# Draw notes positions
-for pos in note_positions:
-    x = pos[0]
-    y = pos[1]
-    cv2.rectangle(main_color, (x, y), (x, y), (255, 0, 0))
-
 # Line references with clefs positions
 for h in clefs_heights:
     ch = h + clef_template.shape[0] - 1
-    line_h = (clef_template.shape[0]-1) / 4
     cv2.line(main_color, (500, h), (main_color.shape[0], h), (0, 0, 255))
     cv2.line(main_color, (500, ch), (main_color.shape[0], ch), (0, 0, 255))
 
-    for i in range(1, 4):
-        cv2.line(main_color, (500, h+int(i*line_h)), (main_color.shape[0], h+int(i*line_h)), (0, 127, 255))
+    for i in range(1, 8):
+        cv2.line(main_color, (500, h+int(i*line_hheight)), (main_color.shape[0], h+int(i*line_hheight)), (0, 127, 255))
+
+# Draw notes positions
+for pos in note_positions:
+    x = pos[0]; y = pos[1]
+    cv2.rectangle(main_color, (x, y), (x, y), (255, 0, 0))
 
 # Display the result
 detected_image = cv2.resize(main_color, (int(main_color.shape[1]/2), int(main_color.shape[0]/2)), interpolation=cv2.INTER_AREA)
