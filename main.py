@@ -27,7 +27,25 @@ def note_read():
                 int(pt[0]) + int(tem_w/2),
                 int(pt[1]) + int(tem_h/2)
             ))
-            note_heights.add(pt[1] + int(tem_h/2))
+
+def round_notes():
+    for i in range(len(note_positions)):
+        closest_clef_id, dist = get_closest_clef(i)
+        note_positions[i] = (note_positions[i][0], clefs_heights[closest_clef_id])
+
+def get_closest_clef(note_id):
+    note_height = note_positions[note_id][1]
+    closest_clef_id = 0
+    dist = 100000
+    for i in range(len(clefs_heights)):
+        clef_height = clefs_heights[i]
+        new_dist = min(abs(clef_height - note_height), abs(clef_height + clef_template_height - note_height))
+
+        if new_dist < dist:
+            dist = new_dist
+            closest_clef_id = i
+
+    return (closest_clef_id, dist)
 
 n_count = 4 # note template count
 
@@ -36,6 +54,7 @@ main_color = cv2.imread('ode_to_joy.png', cv2.IMREAD_COLOR)
 main_image = cv2.cvtColor(main_color, cv2.COLOR_BGR2GRAY)
 note_templates = []
 clef_template = cv2.imread('clef0.png', cv2.IMREAD_COLOR)
+clef_template_height = clef_template.shape[1]
 line_height = (clef_template.shape[0]-1) / 4 # distance between consecutive lines of the sheet
 line_hheight = (clef_template.shape[0]-1) / 8 # "distance between notes"
 for i in range(n_count):
@@ -43,11 +62,11 @@ for i in range(n_count):
     note_templates.append(template)
 
 note_positions = []
-note_heights = set()
 clefs_heights = []
 
 clef_read()
 note_read()
+round_notes()
 
 # Line references with clefs positions
 for h in clefs_heights:
