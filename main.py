@@ -35,7 +35,8 @@ def note_read():
 
 def round_notes():
     for note_id in range(len(note_positions)):
-        closest_clef_id = get_closest_clef(note_id)
+        note_height = note_positions[note_id][1]
+        closest_clef_id = get_closest_clef(note_height)
 
         # line closest
         cv2.line(
@@ -53,8 +54,7 @@ def round_notes():
 
         notes_by_clefs[closest_clef_id].append((note_positions[note_id][0], tone_dist))
 
-def get_closest_clef(note_id):
-    note_height = note_positions[note_id][1]
+def get_closest_clef(note_height):
     closest_clef_id = 0
     dist = 10000000000
     for i in range(len(clefs_heights)):
@@ -71,6 +71,22 @@ def get_closest_clef(note_id):
 def order_notes_in_clef():
     for i in range(len(notes_by_clefs)):
         notes_by_clefs[i] = sorted(notes_by_clefs[i], key=lambda x: x[0])
+
+
+def draw():
+    # Line references with clefs positions
+    for h in clefs_heights:
+        ch = h + clef_template.shape[0] - 1
+        cv2.line(main_color, (500, h), (main_color.shape[0], h), (0, 0, 255))
+        cv2.line(main_color, (500, ch), (main_color.shape[0], ch), (0, 0, 255))
+
+        for i in range(1, 8):
+            cv2.line(main_color, (500, h+int(i*line_hheight)), (main_color.shape[0], h+int(i*line_hheight)), (0, 127, 255))
+
+    # Draw notes positions
+    for pos in note_positions:
+        x = pos[0]; y = pos[1]
+        cv2.rectangle(main_color, (x, y), (x, y), (255, 0, 0))
 
 
 n_count = 4 # note template count
@@ -101,21 +117,8 @@ for clef_notes in notes_by_clefs:
     print()
     print(clef_notes)
 
-# Line references with clefs positions
-for h in clefs_heights:
-    ch = h + clef_template.shape[0] - 1
-    cv2.line(main_color, (500, h), (main_color.shape[0], h), (0, 0, 255))
-    cv2.line(main_color, (500, ch), (main_color.shape[0], ch), (0, 0, 255))
-
-    for i in range(1, 8):
-        cv2.line(main_color, (500, h+int(i*line_hheight)), (main_color.shape[0], h+int(i*line_hheight)), (0, 127, 255))
-
-# Draw notes positions
-for pos in note_positions:
-    x = pos[0]; y = pos[1]
-    cv2.rectangle(main_color, (x, y), (x, y), (255, 0, 0))
-
 # Display the result
+draw()
 detected_image = cv2.resize(main_color, (int(main_color.shape[1]/2), int(main_color.shape[0]/2)), interpolation=cv2.INTER_AREA)
 cv2.imshow('Detected Image', detected_image)
 cv2.imwrite('export.png', main_color)
