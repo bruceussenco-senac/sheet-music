@@ -11,7 +11,6 @@ def clef_read():
     clef_count = 0
 
     for pt in zip(*locations[::-1]):
-        cv2.rectangle(main_color, pt, (pt[0] + clef_template.shape[1], pt[1] + clef_template.shape[0]-1), (0, 0, 255))
         clefs_heights.append(int(pt[1]))
         clef_count += 1
     
@@ -26,8 +25,6 @@ def note_read():
         locations = np.where(result >= threshold)
 
         for pt in zip(*locations[::-1]):
-            # Draw rectangles around detected areas
-            cv2.rectangle(main_color, pt, (pt[0] + tem_w, pt[1] + tem_h), (0, 255, 0))
             note_positions.append((
                 int(pt[0]) + int(tem_w/2),
                 int(pt[1]) + int(tem_h/2)
@@ -37,14 +34,6 @@ def round_notes():
     for note_id in range(len(note_positions)):
         note_height = note_positions[note_id][1]
         closest_clef_id = get_closest_clef(note_height)
-
-        # line closest
-        cv2.line(
-            main_color,
-            (int(note_positions[note_id][0]), int(note_positions[note_id][1])),
-            (int(note_positions[note_id][0]), int(clefs_heights[closest_clef_id])),
-            (127, 127, 0)
-        )
 
         dist = note_positions[note_id][1] - clefs_heights[closest_clef_id]
         tone_dist = round(dist/line_hheight)
@@ -83,10 +72,18 @@ def draw():
         for i in range(1, 8):
             cv2.line(main_color, (500, h+int(i*line_hheight)), (main_color.shape[0], h+int(i*line_hheight)), (0, 127, 255))
 
-    # Draw notes positions
-    for pos in note_positions:
-        x = pos[0]; y = pos[1]
-        cv2.rectangle(main_color, (x, y), (x, y), (255, 0, 0))
+    # draw a line from the to note to its clef-figure
+    for clef_index, clef_notes in enumerate(notes_by_clefs):
+        for note in clef_notes:
+            note_x = note[0]
+            note_y = int(clefs_heights[clef_index] + math.floor(note[1] * line_hheight))
+            cv2.line(
+                main_color,
+                (int(note_x), note_y),
+                (int(note_x), int(clefs_heights[clef_index])),
+                (127, 127, 0)
+            )
+            cv2.rectangle(main_color, (note_x, note_y), (note_x, note_y), (255, 0, 0))
 
 
 n_count = 4 # note template count
