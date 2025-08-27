@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import math
 
 threshold = 0.8
 
@@ -29,23 +30,36 @@ def note_read():
             ))
 
 def round_notes():
-    for i in range(len(note_positions)):
-        closest_clef_id, dist = get_closest_clef(i)
-        note_positions[i] = (note_positions[i][0], clefs_heights[closest_clef_id])
+    for note_id in range(len(note_positions)):
+        closest_clef_id = get_closest_clef(note_id)
+
+        # line closest
+        cv2.line(
+            main_color,
+            (int(note_positions[note_id][0]), int(note_positions[note_id][1])),
+            (int(note_positions[note_id][0]), int(clefs_heights[closest_clef_id])),
+            (127, 127, 0)
+        )
+
+        dist = note_positions[note_id][1] - clefs_heights[closest_clef_id]
+        dist = math.floor(round(dist/line_hheight) * line_hheight)
+
+        note_positions[note_id] = (note_positions[note_id][0], clefs_heights[closest_clef_id] + dist)
 
 def get_closest_clef(note_id):
     note_height = note_positions[note_id][1]
     closest_clef_id = 0
-    dist = 100000
+    dist = 10000000000
     for i in range(len(clefs_heights)):
-        clef_height = clefs_heights[i]
-        new_dist = min(abs(clef_height - note_height), abs(clef_height + clef_template_height - note_height))
+        clef_top = clefs_heights[i]
+        clef_bottom = clefs_heights[i] + clef_template_height
+        new_dist = min(abs(clef_top - note_height), abs(clef_bottom - note_height))
 
         if new_dist < dist:
             dist = new_dist
             closest_clef_id = i
 
-    return (closest_clef_id, dist)
+    return closest_clef_id
 
 n_count = 4 # note template count
 
@@ -54,7 +68,7 @@ main_color = cv2.imread('ode_to_joy.png', cv2.IMREAD_COLOR)
 main_image = cv2.cvtColor(main_color, cv2.COLOR_BGR2GRAY)
 note_templates = []
 clef_template = cv2.imread('clef0.png', cv2.IMREAD_COLOR)
-clef_template_height = clef_template.shape[1]
+clef_template_height = clef_template.shape[0]
 line_height = (clef_template.shape[0]-1) / 4 # distance between consecutive lines of the sheet
 line_hheight = (clef_template.shape[0]-1) / 8 # "distance between notes"
 for i in range(n_count):
